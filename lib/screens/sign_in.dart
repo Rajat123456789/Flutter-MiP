@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fitness_activity_tracker/screens/tempscreen.dart';
+import 'package:fitness_activity_tracker/screens/homescreen.dart';
 import 'package:fitness_activity_tracker/screens/loading.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
@@ -123,7 +123,7 @@ class _SigninPageState extends State<SigninPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => TempScreen(
+                                          builder: (context) => HomeScreen(
                                               uid: userCred.user.uid)),
                                     );
                                   }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:fitness_activity_tracker/screens/sign_up.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fitness_activity_tracker/screens/tempscreen.dart';
+import 'package:fitness_activity_tracker/screens/homescreen.dart';
 
 main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,7 +29,7 @@ class _AppState extends State<App> {
           ? SigninPage(func: togglePage)
           : SignupPage(func: togglePage);
     } else {
-      return TempScreen(uid: FirebaseAuth.instance.currentUser.uid);
+      return HomeScreen(uid: FirebaseAuth.instance.currentUser.uid);
     }
   }
 }

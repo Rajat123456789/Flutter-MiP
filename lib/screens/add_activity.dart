@@ -60,7 +60,10 @@ class _AddActivityState extends State<AddActivity> {
                 'Running',
                 'Sit-up',
                 'Skipping',
-                'Yoga'
+                'Yoga',
+                'Superman',
+                'Bridge',
+                'Squat'
               ].map<DropdownMenuItem<String>>((String value) {
                 return DropdownMenuItem<String>(
                   value: value,

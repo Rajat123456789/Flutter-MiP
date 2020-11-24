@@ -2,6 +2,10 @@ import 'package:fitness_activity_tracker/screens/add_activity.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fitness_activity_tracker/database/dbase.dart';
+import 'package:fitness_activity_tracker/screens/completed_activities.dart';
+import 'package:audioplayers/audio_cache.dart';
 
 class Activity {
   String name;
@@ -9,20 +13,50 @@ class Activity {
   Activity({this.name, this.duration});
 }
 
-class TempScreen extends StatefulWidget {
+class HomeScreen extends StatefulWidget {
+  final String uid;
+  HomeScreen({this.uid});
   @override
-  _TempScreenState createState() => _TempScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _TempScreenState extends State<TempScreen> {
-  List activities = [
-    Activity(name: 'Cycling', duration: 1),
-    Activity(name: 'Skipping', duration: 2),
-    Activity(name: 'Plank', duration: 1),
-    Activity(name: 'Push-up', duration: 5),
-    Activity(name: 'Yoga', duration: 3),
-    Activity(name: 'Running', duration: 5),
-  ];
+class _HomeScreenState extends State<HomeScreen> {
+  final _auth = FirebaseAuth.instance;
+  List<Activity> activities = [];
+
+  void playSound() {
+    // final p = AudioCache();
+    // p.play();
+  }
+
+  fetchData() async {
+    var data = await DatabaseService().getActivities(widget.uid);
+    List<Activity> temp = [];
+    data.docs.forEach((doc) {
+      temp.add(new Activity(
+          name: doc.data()['activity'], duration: doc.data()['duration']));
+    });
+    setState(() {
+      activities = temp;
+    });
+  }
+
+  insertCompletedActivity() async {
+    List<String> act = [];
+    List<int> time = [];
+    activities.forEach((element) {
+      act.add(element.name);
+      time.add(element.duration);
+    });
+    await DatabaseService()
+        .addCompletedActivity(act, time, FirebaseAuth.instance.currentUser.uid);
+  }
+
+  @override
+  void initState() {
+    fetchData();
+    super.initState();
+  }
 
   var min;
   var sec;
@@ -32,9 +66,10 @@ class _TempScreenState extends State<TempScreen> {
   var d = Duration(seconds: 1);
   bool timerActive = false;
   Timer _timer;
-  // var totalTime;
+  var totalTime;
 
   void startTimer() {
+    // play sound
     min = activities[index].duration;
     sec = 0;
     activity = activities[index].name;
@@ -43,18 +78,30 @@ class _TempScreenState extends State<TempScreen> {
         sec = (sec == 0) ? 59 : sec - 1;
         min = (sec == 59) ? min - 1 : min;
         if (min == 0 && sec == 0) {
+          // new activity
+          // play sound
           index++;
           if (index == activities.length) {
             _timer.cancel();
+
+            index = 0;
+            activity = null;
+            timerActive = false;
+            insertCompletedActivity();
           }
           min = activities[index].duration;
           sec = 0;
           activity = activities[index].name;
         }
       });
-      // if (index == activities.length - 1 && min == 0 && sec == 0) {
-      //   timerActive = false;
+      // if (index == activities.length && min == 0 && sec == 0) {
       //   _timer.cancel();
+      //   setState(() {
+      //     timerActive = false;
+      //     index = 0;
+      //     activity = null;
+      //   });
+      //   insertCompletedActivity();
       // }
     });
   }
@@ -70,11 +117,24 @@ class _TempScreenState extends State<TempScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Activity',
-                    style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.w700, fontSize: 25.0)),
                 RaisedButton(
-                  onPressed: () {},
+                  child: Text(
+                    'View Activity',
+                    style: GoogleFonts.montserrat(
+                        fontSize: 20.0, fontWeight: FontWeight.w500),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Completed()),
+                    );
+                  },
+                ),
+                RaisedButton(
+                  onPressed: () async {
+                    await _auth.signOut();
+                    Navigator.pop(context);
+                  },
                   color: Colors.deepOrange,
                   child: Text(
                     'Sign Out',
@@ -146,7 +206,11 @@ class _TempScreenState extends State<TempScreen> {
                     trailing: IconButton(
                       icon: Icon(Icons.delete),
                       iconSize: 25.0,
-                      onPressed: () {},
+                      onPressed: () async {
+                        await DatabaseService().deleteActivity(widget.uid,
+                            activities[index].name, activities[index].duration);
+                        fetchData();
+                      },
                       color: Colors.red[700],
                     ),
                   ));
@@ -163,16 +227,10 @@ class _TempScreenState extends State<TempScreen> {
                     });
                     if (timerActive) {
                       _timer.cancel();
-                      setState(() {
-                        timerActive = false;
-                        index = 0;
-                        activities = null;
-                      });
+                      timerActive = false;
                     } else {
-                      setState(() {
-                        timerActive = true;
-                      });
                       startTimer();
+                      timerActive = true;
                     }
                   },
             color: Colors.blue,
@@ -188,11 +246,13 @@ class _TempScreenState extends State<TempScreen> {
           icon: Icon(Icons.fitness_center),
           color: Colors.black,
           iconSize: 40.0,
-          onPressed: () {
-            Navigator.push(
+          onPressed: () async {
+            await Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => AddActivity()),
+              MaterialPageRoute(
+                  builder: (context) => AddActivity(uid: widget.uid)),
             );
+            fetchData();
           },
         ),
       ),
