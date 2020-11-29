@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fitness_activity_tracker/database/dbase.dart';
 import 'package:fitness_activity_tracker/screens/completed_activities.dart';
+import 'package:fitness_activity_tracker/screens/sign_in.dart';
 import 'package:audioplayers/audio_cache.dart';
 
 class Activity {
@@ -24,40 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _auth = FirebaseAuth.instance;
   List<Activity> activities = [];
 
-  void playSound() {
-    // final p = AudioCache();
-    // p.play();
-  }
-
-  fetchData() async {
-    var data = await DatabaseService().getActivities(widget.uid);
-    List<Activity> temp = [];
-    data.docs.forEach((doc) {
-      temp.add(new Activity(
-          name: doc.data()['activity'], duration: doc.data()['duration']));
-    });
-    setState(() {
-      activities = temp;
-    });
-  }
-
-  insertCompletedActivity() async {
-    List<String> act = [];
-    List<int> time = [];
-    activities.forEach((element) {
-      act.add(element.name);
-      time.add(element.duration);
-    });
-    await DatabaseService()
-        .addCompletedActivity(act, time, FirebaseAuth.instance.currentUser.uid);
-  }
-
-  @override
-  void initState() {
-    fetchData();
-    super.initState();
-  }
-
+  // timer variables
   var min;
   var sec;
   var activity;
@@ -94,62 +62,131 @@ class _HomeScreenState extends State<HomeScreen> {
           activity = activities[index].name;
         }
       });
-      // if (index == activities.length && min == 0 && sec == 0) {
-      //   _timer.cancel();
-      //   setState(() {
-      //     timerActive = false;
-      //     index = 0;
-      //     activity = null;
-      //   });
-      //   insertCompletedActivity();
-      // }
     });
+  }
+
+  fetchData() async {
+    var data = await DatabaseService().getActivities(widget.uid);
+    List<Activity> temp = [];
+    data.docs.forEach((doc) {
+      temp.add(new Activity(
+          name: doc.data()['activity'], duration: doc.data()['duration']));
+    });
+    setState(() {
+      activities = temp;
+    });
+  }
+
+  void playSound() {
+    // final p = AudioCache();
+    // p.play();
+  }
+
+  insertCompletedActivity() async {
+    List<String> act = [];
+    List<int> time = [];
+    activities.forEach((element) {
+      act.add(element.name);
+      time.add(element.duration);
+    });
+    await DatabaseService()
+        .addCompletedActivity(act, time, FirebaseAuth.instance.currentUser.uid);
+  }
+
+  @override
+  void initState() {
+    fetchData();
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            Expanded(
+              child: Image(
+                image: AssetImage('images/drawer-image.jpg'),
+              ),
+            ),
+            SizedBox(
+              height: 20.0,
+            ),
+            Container(
+              decoration: BoxDecoration(
+                  border: Border(
+                bottom: BorderSide(width: 2.0, color: Colors.grey[200]),
+              )),
+              padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.fitness_center,
+                    color: Colors.grey[900],
+                  ),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  FlatButton(
+                    child: Text(
+                      'View My Activity',
+                      style: GoogleFonts.montserrat(
+                          fontSize: 17.0, color: Colors.grey[700]),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => Completed()),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 10.0),
+            Container(
+              decoration: BoxDecoration(
+                  border: Border(
+                bottom: BorderSide(width: 2.0, color: Colors.grey[200]),
+              )),
+              padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.exit_to_app,
+                    color: Colors.grey[900],
+                  ),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  FlatButton(
+                    child: Text(
+                      'Sign Out',
+                      style: GoogleFonts.montserrat(
+                          fontSize: 17.0, color: Colors.grey[700]),
+                    ),
+                    onPressed: () async {
+                      await _auth.signOut();
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => SigninPage()));
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
-          Container(
-            alignment: Alignment.centerLeft,
-            margin: EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                RaisedButton(
-                  child: Text(
-                    'View Activity',
-                    style: GoogleFonts.montserrat(
-                        fontSize: 20.0, fontWeight: FontWeight.w500),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Completed()),
-                    );
-                  },
-                ),
-                RaisedButton(
-                  onPressed: () async {
-                    await _auth.signOut();
-                    Navigator.pop(context);
-                  },
-                  color: Colors.deepOrange,
-                  child: Text(
-                    'Sign Out',
-                    style: GoogleFonts.montserrat(
-                        fontSize: 20.0, fontWeight: FontWeight.w500),
-                  ),
-                )
-              ],
-            ),
-          ),
-          SizedBox(height: 10.0),
+          SizedBox(height: 50.0),
           Container(
             padding: EdgeInsets.all(20.0),
             width: MediaQuery.of(context).size.width - 50,
-            height: 170.0,
+            height: 180.0,
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(5.0),
                 color: Colors.blue[200]),
@@ -171,50 +208,57 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          SizedBox(height: 15.0),
+          SizedBox(height: 18.0),
           Text('Your Activity',
               style: GoogleFonts.montserrat(
-                  fontWeight: FontWeight.w500, fontSize: 20.0)),
+                  fontWeight: FontWeight.w500, fontSize: 25.0)),
           SizedBox(
             height: 10.0,
           ),
           Container(
             margin: EdgeInsets.symmetric(horizontal: 20.0),
-            height: 330.0,
-            child: ListView.builder(
-                shrinkWrap: true,
-                physics: AlwaysScrollableScrollPhysics(),
-                itemCount: activities.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                      child: ListTile(
-                    leading: CircleAvatar(
-                        backgroundImage:
-                            AssetImage('images/${activities[index].name}.jpg')),
-                    title: Text(activities[index].name,
+            height: 360.0,
+            child: activities.length < 1
+                ? Center(
+                    child: Text("You have not added any activities yet",
                         style: GoogleFonts.montserrat(
-                            fontSize: 25.0,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black)),
-                    subtitle: Text(
-                      '${activities[index].duration} min',
-                      style: GoogleFonts.montserrat(
-                          fontSize: 15.0,
-                          color: Colors.grey[850],
-                          fontWeight: FontWeight.w500),
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete),
-                      iconSize: 25.0,
-                      onPressed: () async {
-                        await DatabaseService().deleteActivity(widget.uid,
-                            activities[index].name, activities[index].duration);
-                        fetchData();
-                      },
-                      color: Colors.red[700],
-                    ),
-                  ));
-                }),
+                            fontSize: 20.0, color: Colors.grey[400])))
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: AlwaysScrollableScrollPhysics(),
+                    itemCount: activities.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                          child: ListTile(
+                        leading: CircleAvatar(
+                            backgroundImage: AssetImage(
+                                'images/${activities[index].name}.jpg')),
+                        title: Text(activities[index].name,
+                            style: GoogleFonts.montserrat(
+                                fontSize: 25.0,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black)),
+                        subtitle: Text(
+                          '${activities[index].duration} min',
+                          style: GoogleFonts.montserrat(
+                              fontSize: 15.0,
+                              color: Colors.grey[850],
+                              fontWeight: FontWeight.w500),
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          iconSize: 25.0,
+                          onPressed: () async {
+                            await DatabaseService().deleteActivity(
+                                widget.uid,
+                                activities[index].name,
+                                activities[index].duration);
+                            fetchData();
+                          },
+                          color: Colors.red[700],
+                        ),
+                      ));
+                    }),
           ),
           SizedBox(height: 20.0),
           RaisedButton(
@@ -227,10 +271,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                     if (timerActive) {
                       _timer.cancel();
-                      timerActive = false;
+                      setState(() {
+                        index = 0;
+                        activity = null;
+                        timerActive = false;
+                      });
                     } else {
+                      setState(() {
+                        timerActive = true;
+                      });
                       startTimer();
-                      timerActive = true;
                     }
                   },
             color: Colors.blue,
