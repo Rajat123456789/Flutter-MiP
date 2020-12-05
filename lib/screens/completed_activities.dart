@@ -49,17 +49,24 @@ class _CompletedState extends State<Completed> {
   Widget build(BuildContext context) {
     return loading == true
         ? Loading()
-        : completedActivities == null
+        : completedActivities.length == 0
             ? Scaffold(
+                appBar: AppBar(
+                  backgroundColor: Color(0xFF039BE3),
+                  title: Text(
+                    "Completed activities",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 20.0,
+                    ),
+                  ),
+                ),
                 body: Container(
-                  margin: EdgeInsets.all(10),
+                  margin: EdgeInsets.all(20),
                   child: Center(
                     child: Text(
                       "You have not completed any activities yet",
                       style: GoogleFonts.montserrat(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 25,
-                          color: Colors.grey[700]),
+                          fontSize: 25, color: Colors.grey[700]),
                     ),
                   ),
                 ),

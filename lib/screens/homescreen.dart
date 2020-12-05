@@ -37,7 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Timer _timer;
 
   void startTimer() {
-    // play sound
     min = activities[index].duration;
     sec = 0;
     activity = activities[index].name;
@@ -189,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: Image(
-                image: AssetImage('images/drawer-image.jpg'),
+                image: AssetImage('assets/images/drawer-image.jpg'),
               ),
             ),
             SizedBox(
@@ -344,7 +343,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: ListTile(
                         leading: CircleAvatar(
                             backgroundImage: AssetImage(
-                                'images/${activities[index].name}.jpg')),
+                                'assets/images/${activities[index].name}.jpg')),
                         title: Text(activities[index].name,
                             style: GoogleFonts.montserrat(
                                 fontSize: 25.0,

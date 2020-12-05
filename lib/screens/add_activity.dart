@@ -26,7 +26,7 @@ class _AddActivityState extends State<AddActivity> {
         child: Column(
           children: [
             Image(
-              image: AssetImage('images/add-activity.png'),
+              image: AssetImage('assets/images/add-activity.png'),
             ),
             SizedBox(height: 30),
             Row(
@@ -34,7 +34,7 @@ class _AddActivityState extends State<AddActivity> {
               children: [
                 Text('Select Activity',
                     style: GoogleFonts.montserrat(
-                        color: Colors.grey[700], fontSize: 23.0))
+                        color: Colors.grey[700], fontSize: 20.0))
               ],
             ),
             SizedBox(
@@ -75,7 +75,7 @@ class _AddActivityState extends State<AddActivity> {
                   child: Row(
                     children: [
                       CircleAvatar(
-                        backgroundImage: AssetImage('images/$value.jpg'),
+                        backgroundImage: AssetImage('assets/images/$value.jpg'),
                       ),
                       SizedBox(width: 20.0),
                       Text(value)
@@ -92,7 +92,7 @@ class _AddActivityState extends State<AddActivity> {
               children: [
                 Text('Select Duration',
                     style: GoogleFonts.montserrat(
-                        color: Colors.grey[700], fontSize: 23.0))
+                        color: Colors.grey[700], fontSize: 20.0))
               ],
             ),
             SizedBox(
