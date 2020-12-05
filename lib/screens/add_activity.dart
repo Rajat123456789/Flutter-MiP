@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:fitness_activity_tracker/database/dbase.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddActivity extends StatefulWidget {
-  final String uid;
-  AddActivity({this.uid});
   @override
   _AddActivityState createState() => _AddActivityState();
 }
@@ -18,18 +17,24 @@ class _AddActivityState extends State<AddActivity> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black),
+        backgroundColor: Colors.transparent,
       ),
       body: Container(
-        margin: EdgeInsets.only(left: 20.0, right: 20.0, top: 50.0),
+        margin: EdgeInsets.only(left: 20.0, right: 20.0),
         child: Column(
           children: [
+            Image(
+              image: AssetImage('images/add-activity.png'),
+            ),
+            SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Text('Select Activity',
                     style: GoogleFonts.montserrat(
-                        color: Colors.grey[700], fontSize: 25.0))
+                        color: Colors.grey[700], fontSize: 23.0))
               ],
             ),
             SizedBox(
@@ -54,7 +59,7 @@ class _AddActivityState extends State<AddActivity> {
               },
               items: <String>[
                 'Cycling',
-                'Dumbles',
+                'Dumbbell',
                 'Plank',
                 'Push-up',
                 'Running',
@@ -80,14 +85,14 @@ class _AddActivityState extends State<AddActivity> {
               }).toList(),
             ),
             SizedBox(
-              height: 40.0,
+              height: 20.0,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Text('Select Duration',
                     style: GoogleFonts.montserrat(
-                        color: Colors.grey[700], fontSize: 25.0))
+                        color: Colors.grey[700], fontSize: 23.0))
               ],
             ),
             SizedBox(
@@ -99,11 +104,13 @@ class _AddActivityState extends State<AddActivity> {
                 maxValue: 10,
                 onChanged: (newValue) =>
                     setState(() => timeSelected = newValue)),
-            SizedBox(height: 70.0),
+            SizedBox(height: 20.0),
             RaisedButton.icon(
                 onPressed: () async {
-                  await DatabaseService()
-                      .addActivity(widget.uid, activitySelected, timeSelected);
+                  await DatabaseService().addActivity(
+                      FirebaseAuth.instance.currentUser.uid,
+                      activitySelected,
+                      timeSelected);
                   Navigator.pop(context);
                 },
                 color: Colors.amber,

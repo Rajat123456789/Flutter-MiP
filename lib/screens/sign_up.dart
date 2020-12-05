@@ -25,7 +25,6 @@ class _SignupPagePageState extends State<SignupPage> {
     return loading
         ? Loading()
         : Scaffold(
-            // resizeToAvoidBottomPadding: false,
             appBar: AppBar(
               backgroundColor: Colors.orange,
               actions: [
@@ -43,7 +42,6 @@ class _SignupPagePageState extends State<SignupPage> {
             ),
             backgroundColor: Colors.orange[50],
             body: ListView(
-              // crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Container(
                   padding: EdgeInsets.fromLTRB(15.0, 20.0, 0.0, 0.0),

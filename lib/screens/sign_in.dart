@@ -123,8 +123,7 @@ class _SigninPageState extends State<SigninPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                          builder: (context) => HomeScreen(
-                                              uid: userCred.user.uid)),
+                                          builder: (context) => HomeScreen()),
                                     );
                                   }
                                 } catch (e) {

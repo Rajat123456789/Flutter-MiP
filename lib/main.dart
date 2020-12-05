@@ -24,13 +24,13 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    // if (FirebaseAuth.instance.currentUser == null) {
-    //   return showSignInPage
-    //       ? SigninPage(func: togglePage)
-    //       : SignupPage(func: togglePage);
-    // } else {
-    //   return HomeScreen(uid: FirebaseAuth.instance.currentUser.uid);
-    // }
-    return HomeScreen(uid: "1Uq7x9tqCJWuFYg5RHFALpA4bDu2");
+    if (FirebaseAuth.instance.currentUser == null) {
+      return showSignInPage
+          ? SigninPage(func: togglePage)
+          : SignupPage(func: togglePage);
+    } else {
+      return HomeScreen();
+    }
+    // return HomeScreen(uid: "1Uq7x9tqCJWuFYg5RHFALpA4bDu2");
   }
 }

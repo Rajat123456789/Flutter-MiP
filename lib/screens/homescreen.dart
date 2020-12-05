@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fitness_activity_tracker/database/dbase.dart';
 import 'package:fitness_activity_tracker/screens/completed_activities.dart';
 import 'package:fitness_activity_tracker/screens/sign_in.dart';
+import 'package:fitness_activity_tracker/screens/about.dart';
 import 'package:audioplayers/audio_cache.dart';
 
 class Activity {
@@ -15,8 +16,6 @@ class Activity {
 }
 
 class HomeScreen extends StatefulWidget {
-  final String uid;
-  HomeScreen({this.uid});
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -25,48 +24,54 @@ class _HomeScreenState extends State<HomeScreen> {
   final _auth = FirebaseAuth.instance;
   List<Activity> activities = [];
 
+  final p = AudioCache();
+
   // timer variables
-  var min;
-  var sec;
-  var activity;
-  var index = 0;
-  var startStopButton = 'START';
-  var d = Duration(seconds: 1);
+  int min;
+  int sec;
+  String activity;
+  int index = 0;
+  String startResetButton = 'START';
+  Duration d = Duration(seconds: 1);
   bool timerActive = false;
   Timer _timer;
-  var totalTime;
 
   void startTimer() {
     // play sound
     min = activities[index].duration;
     sec = 0;
     activity = activities[index].name;
+    playSound(activity);
     _timer = new Timer.periodic(d, (timer) {
       setState(() {
         sec = (sec == 0) ? 59 : sec - 1;
         min = (sec == 59) ? min - 1 : min;
         if (min == 0 && sec == 0) {
-          // new activity
-          // play sound
           index++;
           if (index == activities.length) {
-            _timer.cancel();
-
-            index = 0;
-            activity = null;
-            timerActive = false;
+            // all activities completed
             insertCompletedActivity();
+            setState(() {
+              index = 0;
+              activity = null;
+              timerActive = false;
+              startResetButton = 'START';
+            });
+            _timer.cancel();
+            showSuccessDialog(context);
           }
           min = activities[index].duration;
           sec = 0;
           activity = activities[index].name;
+          playSound(activity);
         }
       });
     });
   }
 
   fetchData() async {
-    var data = await DatabaseService().getActivities(widget.uid);
+    var data = await DatabaseService()
+        .getActivities(FirebaseAuth.instance.currentUser.uid);
     List<Activity> temp = [];
     data.docs.forEach((doc) {
       temp.add(new Activity(
@@ -77,9 +82,8 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void playSound() {
-    // final p = AudioCache();
-    // p.play();
+  void playSound(String activityName) {
+    p.play("sounds/$activityName.mp3");
   }
 
   insertCompletedActivity() async {
@@ -91,6 +95,84 @@ class _HomeScreenState extends State<HomeScreen> {
     });
     await DatabaseService()
         .addCompletedActivity(act, time, FirebaseAuth.instance.currentUser.uid);
+  }
+
+  showSuccessDialog(BuildContext context) {
+    AlertDialog success = AlertDialog(
+      title: Text(
+        "Congratulations!",
+        style: GoogleFonts.montserrat(),
+      ),
+      content: Text(
+        "You have completed all the activities in your current list.\nYour activity has been recorded.",
+        style: GoogleFonts.montserrat(),
+      ),
+      actions: [
+        FlatButton(
+          child: Text(
+            "OK",
+            style: GoogleFonts.montserrat(),
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return success;
+      },
+    );
+  }
+
+  showAlertDialog(BuildContext context, int index) {
+    AlertDialog alert = AlertDialog(
+      title: Text(
+        "Alert",
+        style: GoogleFonts.montserrat(),
+      ),
+      content: Text(
+        "Are you sure you want to delete this activity?",
+        style: GoogleFonts.montserrat(),
+      ),
+      actions: [
+        FlatButton(
+          child: Text(
+            "Yes",
+            style: GoogleFonts.montserrat(),
+          ),
+          onPressed: () async {
+            await DatabaseService().deleteActivity(
+                FirebaseAuth.instance.currentUser.uid,
+                activities[index].name,
+                activities[index].duration);
+            fetchData();
+            Navigator.of(context).pop();
+          },
+        ),
+        FlatButton(
+          child: Text(
+            "No",
+            style: GoogleFonts.montserrat(),
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 
   @override
@@ -177,6 +259,36 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+            SizedBox(height: 10.0),
+            Container(
+              decoration: BoxDecoration(
+                  border: Border(
+                bottom: BorderSide(width: 2.0, color: Colors.grey[200]),
+              )),
+              padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.help_outline,
+                    color: Colors.grey[900],
+                  ),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  FlatButton(
+                    child: Text(
+                      'About',
+                      style: GoogleFonts.montserrat(
+                          fontSize: 17.0, color: Colors.grey[700]),
+                    ),
+                    onPressed: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => Tabs()));
+                    },
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),
@@ -195,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // timer here
-                Text(activity == null ? '' : 'Start $activity',
+                Text(!timerActive ? '' : 'Start $activity',
                     style: GoogleFonts.montserrat(
                         fontSize: 30.0, fontWeight: FontWeight.w700)),
                 SizedBox(height: 10.0),
@@ -249,11 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           icon: Icon(Icons.delete),
                           iconSize: 25.0,
                           onPressed: () async {
-                            await DatabaseService().deleteActivity(
-                                widget.uid,
-                                activities[index].name,
-                                activities[index].duration);
-                            fetchData();
+                            showAlertDialog(context, index);
                           },
                           color: Colors.red[700],
                         ),
@@ -266,8 +374,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? null
                 : () {
                     setState(() {
-                      startStopButton =
-                          startStopButton == 'START' ? 'STOP' : 'START';
+                      startResetButton =
+                          startResetButton == 'START' ? 'RESET' : 'START';
                     });
                     if (timerActive) {
                       _timer.cancel();
@@ -284,7 +392,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                   },
             color: Colors.blue,
-            child: Text('$startStopButton',
+            child: Text('$startResetButton',
                 style: GoogleFonts.montserrat(
                     fontSize: 20.0, fontWeight: FontWeight.w500)),
           ),
@@ -299,8 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onPressed: () async {
             await Navigator.push(
               context,
-              MaterialPageRoute(
-                  builder: (context) => AddActivity(uid: widget.uid)),
+              MaterialPageRoute(builder: (context) => AddActivity()),
             );
             fetchData();
           },
